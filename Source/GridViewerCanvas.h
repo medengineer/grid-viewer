@@ -70,6 +70,10 @@ public:
     /** Called when data acquisition ends.*/
     void endAnimation() override;
 
+    void setParameter(int, float) override;
+
+    void setParameter(int, int, int, float) override;
+
     /**
      *  Overrides from juce::Component
      */
@@ -77,8 +81,7 @@ public:
     void paint(Graphics& g) override;
     void resized() override;
 
-    /** Custom method for updating settings */
-    void updateDataStream(DataStream* stream);
+    void updateDataStream();
 
 private:
     class GridViewerNode* node;

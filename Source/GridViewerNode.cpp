@@ -91,6 +91,15 @@ GridViewerNode::GridViewerNode()
 : GenericProcessor ("Grid Viewer")
 {
 
+	activityView = new ActivityView(4096, 10);
+
+	float sampleRate = getSampleRate();
+
+	skip = (int)(sampleRate / targetSampleRate);
+
+	if (skip < 1)
+		skip = 1;
+
 }
 
 GridViewerNode::~GridViewerNode()
@@ -98,13 +107,14 @@ GridViewerNode::~GridViewerNode()
 
 AudioProcessorEditor* GridViewerNode::createEditor()
 {
-    editor = std::make_unique<GridViewerEditor> (this);
-    return editor.get();
+	editor = new GridViewerEditor(this, true);
+	editor->enable();
+    return editor;
 }
 
 void GridViewerNode::setParameter(int index, float value)
 {
-
+	/*
 	if (value > 100)
 	{
 
@@ -123,12 +133,27 @@ void GridViewerNode::setParameter(int index, float value)
 		if (skip < 1)
 			skip = 1;
 	}
+	*/
 	
 }
 
-void GridViewerNode::process(AudioBuffer<float>& b)
+void GridViewerNode::process(AudioSampleBuffer& buffer)
 {
 
+	const int nChannels = buffer.getNumChannels();
+
+	for (int ch = 0; ch < nChannels; ++ch)
+	{
+		const int nSamples = buffer.getNumSamples();
+
+		for (int n = 0; n < nSamples; n += skip)
+		{
+			float* bufPtr = buffer.getWritePointer(ch);
+			activityView->addSample(*(bufPtr + n), ch);
+		}
+	}
+
+	/*
 	uint32 numSamples = getNumSamplesInBlock(currentStream);
 
 	for (auto channel : continuousChannels)
@@ -145,6 +170,7 @@ void GridViewerNode::process(AudioBuffer<float>& b)
 			}
 		}
 	}
+	*/
 
 }
 

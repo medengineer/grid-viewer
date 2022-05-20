@@ -28,26 +28,31 @@
 
 using namespace GridViewer;
 
-GridViewerEditor::GridViewerEditor(GenericProcessor* parentNode)
-					: VisualizerEditor(parentNode, "Grid", 180),
+GridViewerEditor::GridViewerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
+					: VisualizerEditor(parentNode, 180, useDefaultParameterEditors),
 					  hasNoInputs(true)
 {
+
+	desiredWidth = 180;
+
 	gridViewerNode = (GridViewerNode *)parentNode;
     
     streamSelectionLabel = std::make_unique<Label>("Stream Selection Label", "Display Stream:");
     streamSelectionLabel->setBounds(10, 30, 130, 24);
-    addAndMakeVisible(streamSelectionLabel.get());
+    //addAndMakeVisible(streamSelectionLabel.get());
 
 	streamSelection = std::make_unique<ComboBox>("Stream Selector");
     streamSelection->setBounds(15, 60, 120, 20);
     streamSelection->addListener(this);
-    addAndMakeVisible(streamSelection.get());
+    //addAndMakeVisible(streamSelection.get());
     
     streamSampleRateLabel = std::make_unique<Label>("Stream Sample Rate Label", "Sample Rate:");
 	streamSampleRateLabel->setFont(Font("Fira Code", "SemiBold", 16.0f));
 	streamSampleRateLabel->setJustificationType(Justification::centred);
     streamSampleRateLabel->setBounds(10, 90, 160, 24);
     addAndMakeVisible(streamSampleRateLabel.get());
+
+	updateStreamSelectorOptions();
 }
 
 GridViewerEditor::~GridViewerEditor()
@@ -56,6 +61,7 @@ GridViewerEditor::~GridViewerEditor()
 
 void GridViewerEditor::comboBoxChanged(ComboBox* cb)
 {
+	/*
     if (cb == streamSelection.get())
     {
 		uint16 selectedStream = cb->getSelectedId();
@@ -63,6 +69,7 @@ void GridViewerEditor::comboBoxChanged(ComboBox* cb)
 		if (selectedStream > 0)
 			setDrawableStream(selectedStream);
     }
+	*/
 
 }
 
@@ -73,53 +80,25 @@ Visualizer* GridViewerEditor::createNewCanvas()
 
 void GridViewerEditor::updateSettings()
 {
-	updateStreamSelectorOptions();
+	//updateStreamSelectorOptions();
 }
 
 void GridViewerEditor::updateStreamSelectorOptions()
 {
-    bool needsUpdate = false;
-	uint16 currentStreamId = streamSelection->getSelectedId();
-
-	streamSelection->clear(dontSendNotification);
-
-	// Add all datastreams to combobox
-	for (auto stream : gridViewerNode->getDataStreams())
-	{
-		uint16 streamID = stream->getStreamId();
-
-		streamSelection->addItem("[" + String(stream->getSourceNodeId()) + "] " +
-			stream->getName(), streamID);
-
-	}
-
-	if (streamSelection->indexOfItemId(currentStreamId) > -1)
-	{
-		streamSelection->setSelectedId(currentStreamId, sendNotification);
-	}
-	else
-	{
-		if (streamSelection->getNumItems() > 0)
-			streamSelection->setSelectedItemIndex(0, sendNotification);
-	}
-
+	setDrawableStream();
 }
 
-void GridViewerEditor::setDrawableStream(uint16 streamId)
+void GridViewerEditor::setDrawableStream()
 {
 
-	std::cout << "Setting drawable stream to " << streamId << std::endl;
+	//std::cout << "Setting drawable stream to " << streamId << std::endl;
 
-	gridViewerNode->setParameter(0, streamId);
+	//gridViewerNode->setParameter(0, streamId);
 
 	if (canvas != nullptr)
 	{
 		GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
-
-		DataStream* stream = gridViewerNode->getDataStream(streamId);
-
-		if (stream != nullptr)
-			c->updateDataStream(stream);
+		c->updateDataStream();
 	}
 		
 }

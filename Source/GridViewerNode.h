@@ -70,13 +70,13 @@ public:
     AudioProcessorEditor* createEditor() override;
 
     /** Pushes samples to the data buffer*/
-    void process(AudioBuffer<float>& buffer) override;
+    void process(AudioSampleBuffer& buffer) override;
 
     /** Enables the editor */
-    bool startAcquisition() override;
+    bool startAcquisition();
 
     /** Disables the editor*/
-    bool stopAcquisition() override;
+    bool stopAcquisition();
 
     /** Changes the selected stream */
     void setParameter(int index, float value) override;
@@ -86,9 +86,8 @@ public:
 
 private:
 
-    std::unique_ptr<ActivityView> activityView;
+    ScopedPointer<ActivityView> activityView;
 
-	uint16 currentStream;
     int skip = 1;
     const float targetSampleRate = 500;
 

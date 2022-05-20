@@ -35,10 +35,10 @@ class GridViewerEditor
 public:
 
     /** Constructor */
-    GridViewerEditor(GenericProcessor* parentNode);
+    GridViewerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors);
 
     /** Destructor */
-    virtual ~GridViewerEditor() override;
+    virtual ~GridViewerEditor();
 
     /** Updates channel count */
     void updateSettings() override;
@@ -77,7 +77,7 @@ private:
 
     uint16 selectedStream = 0;
 
-    void setDrawableStream(uint16 streamId);
+    void setDrawableStream();
     
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GridViewerEditor);

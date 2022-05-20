@@ -93,6 +93,16 @@ void GridViewerCanvas::update()
 
 }
 
+void GridViewerCanvas::setParameter(int, float)
+{
+
+}
+
+void GridViewerCanvas::setParameter(int, int, int, float)
+{
+    
+}
+
 
 void GridViewerCanvas::refresh()
 {
@@ -122,13 +132,12 @@ void GridViewerCanvas::endAnimation()
     stopCallbacks();
 }
 
-
-void GridViewerCanvas::updateDataStream(DataStream* stream)
+void GridViewerCanvas::updateDataStream()
 {
 
-    std::cout << "Canvas updating stream to " << stream->getName() << std::endl;
+    std::cout << "Canvas updating stream to " << node->getName() << std::endl;
 
-    numChannels = stream->getChannelCount();
+    numChannels = node->getNumInputChannels();
 
     if (numChannels > 4096)
         numChannels = 4096;
