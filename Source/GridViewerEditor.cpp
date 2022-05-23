@@ -33,6 +33,7 @@ GridViewerEditor::GridViewerEditor(GenericProcessor* parentNode, bool useDefault
 					  hasNoInputs(true)
 {
 
+	tabText = "Grid Viewer";
 	desiredWidth = 180;
 
 	gridViewerNode = (GridViewerNode *)parentNode;
@@ -106,9 +107,15 @@ void GridViewerEditor::setDrawableStream()
 void GridViewerEditor::startAcquisition()
 {
 	streamSelection->setEnabled(false);
+
+	if (canvas != nullptr)
+        canvas->beginAnimation();
 }
 
 void GridViewerEditor::stopAcquisition()
 {
 	streamSelection->setEnabled(true);
+
+	if (canvas != nullptr)
+        canvas->endAnimation();
 }

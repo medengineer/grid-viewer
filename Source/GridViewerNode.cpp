@@ -91,6 +91,7 @@ GridViewerNode::GridViewerNode()
 : GenericProcessor ("Grid Viewer")
 {
 
+	setProcessorType(PROCESSOR_TYPE_SINK);
 	activityView = new ActivityView(4096, 10);
 
 	float sampleRate = getSampleRate();
@@ -108,7 +109,6 @@ GridViewerNode::~GridViewerNode()
 AudioProcessorEditor* GridViewerNode::createEditor()
 {
 	editor = new GridViewerEditor(this, true);
-	editor->enable();
     return editor;
 }
 
@@ -176,7 +176,7 @@ void GridViewerNode::process(AudioSampleBuffer& buffer)
 
 
 
-bool GridViewerNode::startAcquisition()
+bool GridViewerNode::enable()
 {
 
 	activityView->reset();
@@ -185,10 +185,10 @@ bool GridViewerNode::startAcquisition()
 
 	editor->enable();
 
-	return true;
+	return isEnabled;
 }
 
-bool GridViewerNode::stopAcquisition()
+bool GridViewerNode::disable()
 {
     ((GridViewerEditor*) getEditor())->disable();
     return true;

@@ -66,6 +66,8 @@ public:
     /** Destructor */
     virtual ~GridViewerNode() override;
 
+    bool hasEditor() const {return true;}
+    
     /** Creates the editor UI */
     AudioProcessorEditor* createEditor() override;
 
@@ -73,10 +75,10 @@ public:
     void process(AudioSampleBuffer& buffer) override;
 
     /** Enables the editor */
-    bool startAcquisition();
+    bool enable();
 
     /** Disables the editor*/
-    bool stopAcquisition();
+    bool disable();
 
     /** Changes the selected stream */
     void setParameter(int index, float value) override;
