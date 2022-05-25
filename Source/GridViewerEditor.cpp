@@ -101,6 +101,8 @@ void GridViewerEditor::updateStreamSelectorOptions()
 	{
 		if (streamSelection->getNumItems() > 0)
 			streamSelection->setSelectedItemIndex(0, sendNotification);
+		else
+			streamSampleRateLabel->setText("Sample Rate: <NULL>", dontSendNotification);
 	}
 
 }
@@ -112,15 +114,17 @@ void GridViewerEditor::setDrawableStream(uint16 streamId)
 
 	gridViewerNode->setParameter(0, streamId);
 
-	if (canvas != nullptr)
-	{
-		GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
+	DataStream* stream = gridViewerNode->getDataStream(streamId);
 
-		DataStream* stream = gridViewerNode->getDataStream(streamId);
+	streamSampleRateLabel->setText("Sample Rate: " + String(stream->getSampleRate()), dontSendNotification);
 
-		if (stream != nullptr)
-			c->updateDataStream(stream);
-	}
+	if (canvas == nullptr)
+		checkForCanvas();
+
+	GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
+
+	if (stream != nullptr)
+		c->updateDataStream(stream);
 		
 }
 
