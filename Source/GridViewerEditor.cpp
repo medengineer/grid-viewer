@@ -114,17 +114,17 @@ void GridViewerEditor::setDrawableStream(uint16 streamId)
 
 	gridViewerNode->setParameter(0, streamId);
 
-	DataStream* stream = gridViewerNode->getDataStream(streamId);
-
-	streamSampleRateLabel->setText("Sample Rate: " + String(stream->getSampleRate()), dontSendNotification);
-
 	if (canvas == nullptr)
 		checkForCanvas();
 
-	GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
+	DataStream* stream = gridViewerNode->getDataStream(streamId);
 
 	if (stream != nullptr)
+	{
+		GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
 		c->updateDataStream(stream);
+		streamSampleRateLabel->setText("Sample Rate: " + String(stream->getSampleRate()), dontSendNotification);
+	}
 		
 }
 
