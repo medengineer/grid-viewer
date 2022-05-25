@@ -81,7 +81,7 @@ public:
     void paint(Graphics& g) override;
     void resized() override;
 
-    void updateDataStream();
+    void updateCanvasSubprocessor(uint32 subProcId);
 
 private:
     class GridViewerNode* node;
@@ -90,6 +90,8 @@ private:
     OwnedArray<Electrode> electrodes;
 
     int numChannels;
+
+    void updateElectrodeGrid(int numColumns);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GridViewerCanvas);
 };

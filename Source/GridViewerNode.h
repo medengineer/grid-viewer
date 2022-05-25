@@ -74,6 +74,8 @@ public:
     /** Pushes samples to the data buffer*/
     void process(AudioSampleBuffer& buffer) override;
 
+    void updateSettings() override;
+
     /** Enables the editor */
     bool enable();
 
@@ -85,13 +87,30 @@ public:
 
     /** Gets the latest peak-to-peak values*/
     const float* getLatestValues() { return activityView->getPeakToPeakValues(); }
+    
+    /** Gets the specified subprocessors' channel count*/
+    int getSubprocessorChanCount(uint32 subProcId) { return subprocessorChanCount[subProcId]; }
+
+    /** Get subprocessor name for ID */
+    String getSubprocessorNameForId(uint32 subProcId) { return subprocessorNames[subProcId]; }
 
 private:
 
-    ScopedPointer<ActivityView> activityView;
+    juce::HashMap<int, float> inputSampleRates; // hold the possible subprocessor sample rates
+    juce::HashMap<int, int> subprocessorChanCount; // hold the selected subprocessor channel count
+    juce::HashMap<int, String> subprocessorNames; // hold the possible subprocessor names
+
+    uint32 subprocessorToDraw;
+
+    std::unique_ptr<ActivityView> activityView;
 
     int skip = 1;
     const float targetSampleRate = 500;
+
+    static uint32 getChannelSourceId(const InfoObjectCommon* chan);
+
+    /** Get subprocessor name for channel */
+    String getSubprocessorName(int chan);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GridViewerNode);
 };

@@ -38,22 +38,20 @@ GridViewerEditor::GridViewerEditor(GenericProcessor* parentNode, bool useDefault
 
 	gridViewerNode = (GridViewerNode *)parentNode;
     
-    streamSelectionLabel = std::make_unique<Label>("Stream Selection Label", "Display Stream:");
-    streamSelectionLabel->setBounds(10, 30, 130, 24);
-    //addAndMakeVisible(streamSelectionLabel.get());
+    subprocessorSelectionLabel = std::make_unique<Label>("Subprocessor Selection Label", "Display Subprocessor:");
+    subprocessorSelectionLabel->setBounds(10, 30, 130, 24);
+    addAndMakeVisible(subprocessorSelectionLabel.get());
 
-	streamSelection = std::make_unique<ComboBox>("Stream Selector");
-    streamSelection->setBounds(15, 60, 120, 20);
-    streamSelection->addListener(this);
-    //addAndMakeVisible(streamSelection.get());
+	subprocessorSelection = std::make_unique<ComboBox>("Subprocessor Selector");
+    subprocessorSelection->setBounds(15, 60, 120, 20);
+    subprocessorSelection->addListener(this);
+    addAndMakeVisible(subprocessorSelection.get());
     
-    streamSampleRateLabel = std::make_unique<Label>("Stream Sample Rate Label", "Sample Rate:");
-	streamSampleRateLabel->setFont(Font("Fira Code", "SemiBold", 16.0f));
-	streamSampleRateLabel->setJustificationType(Justification::centred);
-    streamSampleRateLabel->setBounds(10, 90, 160, 24);
-    addAndMakeVisible(streamSampleRateLabel.get());
-
-	updateStreamSelectorOptions();
+    subprocessorSampleRateLabel = std::make_unique<Label>("Subprocessor Sample Rate Label", "Sample Rate:");
+	// subprocessorSampleRateLabel->setFont(Font("Fira Code", "SemiBold", 16.0f));
+	subprocessorSampleRateLabel->setJustificationType(Justification::centred);
+    subprocessorSampleRateLabel->setBounds(10, 90, 160, 24);
+    addAndMakeVisible(subprocessorSampleRateLabel.get());
 }
 
 GridViewerEditor::~GridViewerEditor()
@@ -62,15 +60,12 @@ GridViewerEditor::~GridViewerEditor()
 
 void GridViewerEditor::comboBoxChanged(ComboBox* cb)
 {
-	/*
-    if (cb == streamSelection.get())
+    if (cb == subprocessorSelection.get())
     {
-		uint16 selectedStream = cb->getSelectedId();
+		uint32 selectedSubproc = cb->getSelectedId();
 
-		if (selectedStream > 0)
-			setDrawableStream(selectedStream);
+		setDrawableSubprocessor(selectedSubproc);
     }
-	*/
 
 }
 
@@ -79,34 +74,62 @@ Visualizer* GridViewerEditor::createNewCanvas()
     return new GridViewerCanvas(gridViewerNode);
 }
 
-void GridViewerEditor::updateSettings()
+void GridViewerEditor::updateSubprocessorSelectorOptions(juce::SortedSet<uint32> subprocessorIndices)
 {
-	//updateStreamSelectorOptions();
+	std::cout << "Updating subprocessor selector!!!" << std::endl;
+	// clear out the old data
+    subprocessorSelection->clear(dontSendNotification);
+
+	int subprocessorToSet = -1;
+	if (subprocessorIndices.size() > 0)
+	{
+		subprocessorToSet = 0;
+	}
+
+	for (int i = 0; i < subprocessorIndices.size(); ++i)
+	{
+		String name = gridViewerNode->getSubprocessorNameForId(subprocessorIndices.getUnchecked(i));
+		subprocessorSelection->addItem(name, subprocessorIndices.getUnchecked(i));
+	}
+
+	if (subprocessorToSet >= 0)
+	{
+		subprocessorSelection->setSelectedId(subprocessorIndices.getUnchecked(subprocessorToSet), sendNotification);
+	}
+	else
+	{
+		subprocessorSelection->addItem("None", 1);
+		subprocessorSelection->setSelectedId(1, dontSendNotification);
+
+		String sampleRateLabelText = "Sample Rate: <not available>";
+		subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
+	}
 }
 
-void GridViewerEditor::updateStreamSelectorOptions()
+void GridViewerEditor::updateSampleRateLabel(String labelText)
 {
-	setDrawableStream();
+	String sampleRateLabelText = "Sample Rate: " + labelText;
+	subprocessorSampleRateLabel->setText(sampleRateLabelText, dontSendNotification);
 }
 
-void GridViewerEditor::setDrawableStream()
+void GridViewerEditor::setDrawableSubprocessor(uint32 subProcId)
 {
 
-	//std::cout << "Setting drawable stream to " << streamId << std::endl;
+	std::cout << "Setting drawable subprocessor to " << subProcId << std::endl;
 
-	//gridViewerNode->setParameter(0, streamId);
+	gridViewerNode->setParameter(0, subProcId);
 
 	if (canvas != nullptr)
 	{
 		GridViewerCanvas* c = (GridViewerCanvas*)canvas.get();
-		c->updateDataStream();
+		c->updateCanvasSubprocessor(subProcId);
 	}
 		
 }
 
 void GridViewerEditor::startAcquisition()
 {
-	streamSelection->setEnabled(false);
+	subprocessorSelection->setEnabled(false);
 
 	if (canvas != nullptr)
         canvas->beginAnimation();
@@ -114,7 +137,7 @@ void GridViewerEditor::startAcquisition()
 
 void GridViewerEditor::stopAcquisition()
 {
-	streamSelection->setEnabled(true);
+	subprocessorSelection->setEnabled(true);
 
 	if (canvas != nullptr)
         canvas->endAnimation();

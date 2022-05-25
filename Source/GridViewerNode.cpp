@@ -87,19 +87,12 @@ void ActivityView::reset()
 
 }
 
-GridViewerNode::GridViewerNode()
-: GenericProcessor ("Grid Viewer")
+GridViewerNode::GridViewerNode() 
+	: GenericProcessor ("Grid Viewer"),
+	  subprocessorToDraw(0)
 {
 
 	setProcessorType(PROCESSOR_TYPE_SINK);
-	activityView = new ActivityView(4096, 10);
-
-	float sampleRate = getSampleRate();
-
-	skip = (int)(sampleRate / targetSampleRate);
-
-	if (skip < 1)
-		skip = 1;
 
 }
 
@@ -114,26 +107,26 @@ AudioProcessorEditor* GridViewerNode::createEditor()
 
 void GridViewerNode::setParameter(int index, float value)
 {
-	/*
-	if (value > 100)
+	if (index == 0)
 	{
 
-		std::cout << "Node updating stream to " << value << std::endl;
+		std::cout << "Node updating subprocessor to " << (uint32)value << std::endl;
 
-		currentStream = (uint16)value;
+		subprocessorToDraw = (uint32)value;
 
 		activityView.reset();
 
-		activityView = std::make_unique<ActivityView>(getDataStream(currentStream)->getChannelCount(), 10);
+		activityView = std::make_unique<ActivityView>(subprocessorChanCount[subprocessorToDraw], 10);
 
-		float sampleRate = getDataStream(currentStream)->getSampleRate();
+		float sampleRate = inputSampleRates[subprocessorToDraw];
+		auto editor = (GridViewerEditor*) getEditor();
+		editor->updateSampleRateLabel(String(sampleRate));
 
 		skip = (int)(sampleRate / targetSampleRate);
 
 		if (skip < 1)
 			skip = 1;
 	}
-	*/
 	
 }
 
@@ -142,14 +135,21 @@ void GridViewerNode::process(AudioSampleBuffer& buffer)
 
 	const int nChannels = buffer.getNumChannels();
 
-	for (int ch = 0; ch < nChannels; ++ch)
-	{
-		const int nSamples = buffer.getNumSamples();
 
-		for (int n = 0; n < nSamples; n += skip)
+	for (int ch = 0, localIndex = 0; ch < nChannels; ++ch)
+	{
+		if(getChannelSourceId(getDataChannel(ch)) == subprocessorToDraw)
 		{
-			float* bufPtr = buffer.getWritePointer(ch);
-			activityView->addSample(*(bufPtr + n), ch);
+			const int nSamples = getNumSamples(ch);
+			const float *buffPtr = buffer.getReadPointer(ch);
+
+			for (int n = 0; n < nSamples; n += skip)
+			{
+				
+				activityView->addSample(*(buffPtr + n), localIndex);
+			}
+
+			localIndex++;
 		}
 	}
 
@@ -174,6 +174,83 @@ void GridViewerNode::process(AudioSampleBuffer& buffer)
 
 }
 
+
+void GridViewerNode::updateSettings()
+{
+    std::cout << "Setting num inputs on GridViewer to " << getNumInputs() << std::endl;
+
+	int totalSubprocessors = 0;
+	juce::SortedSet<uint32> inputSubprocessorIndices;
+	inputSampleRates.clear();
+	subprocessorChanCount.clear();
+	subprocessorNames.clear();
+
+	for (int i = 0; i < getTotalDataChannels(); i++)
+	{
+		uint32 channelSubprocessor = getChannelSourceId(getDataChannel(i));
+
+		if (!inputSubprocessorIndices.contains(channelSubprocessor))
+		{
+			std::cout << "Adding subprocessor:  " << channelSubprocessor << std::endl;
+			inputSubprocessorIndices.add(channelSubprocessor);
+			inputSampleRates.set(channelSubprocessor, getDataChannel(i)->getSampleRate());
+			subprocessorChanCount.set(channelSubprocessor, 1);
+			subprocessorNames.set(channelSubprocessor, getSubprocessorName(i));
+			totalSubprocessors++;
+		}
+		else
+		{
+			int chanCount = subprocessorChanCount[channelSubprocessor] + 1;
+			subprocessorChanCount.set(channelSubprocessor, chanCount);
+		}
+	}
+
+	// update the editor's subprocessor selection display, only if there's atleast one subprocessor
+	if (totalSubprocessors > 0)
+	{
+		GridViewerEditor * ed = (GridViewerEditor*) getEditor();
+		ed->updateSubprocessorSelectorOptions(inputSubprocessorIndices);
+	}
+
+}
+
+
+uint32 GridViewerNode::getChannelSourceId(const InfoObjectCommon* chan)
+{
+    return getProcessorFullId(chan->getSourceNodeID(), chan->getSubProcessorIdx());
+}
+
+
+String GridViewerNode::getSubprocessorName(int channel)
+{
+
+	const DataChannel* ch = getDataChannel(channel);
+
+	int subprocessorNameId = ch->findMetaData(MetaDataDescriptor::CHAR, 64, "subprocessor-name");
+
+	String name;
+
+	if (subprocessorNameId > -1)
+	{
+		
+		const MetaDataValue* val = ch->getMetaDataValue(subprocessorNameId);
+		String stringValue;
+		val->getValue(stringValue);
+
+		name = ch->getSourceName() + " " + stringValue;
+
+		// std::cout << "Sb name: " << name << std::endl;
+	}
+	else {
+
+		uint16 sourceNodeId = ch->getSourceNodeID();
+		uint16 subProcessorIdx = ch->getSubProcessorIdx();
+
+		name = ch->getSourceName() + " " + String(sourceNodeId) + "/" + String(subProcessorIdx);
+	}
+
+	return name;
+}
 
 
 bool GridViewerNode::enable()

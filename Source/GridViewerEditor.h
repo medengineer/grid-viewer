@@ -40,9 +40,6 @@ public:
     /** Destructor */
     virtual ~GridViewerEditor();
 
-    /** Updates channel count */
-    void updateSettings() override;
-
     /** Sets the drawable stream */
     void comboBoxChanged(ComboBox *cb) override;
 
@@ -54,31 +51,32 @@ public:
     virtual Visualizer* createNewCanvas() override;
 
     /** Updates available streams*/
-	void updateStreamSelectorOptions();
+	void updateSubprocessorSelectorOptions(juce::SortedSet<uint32> subProcessors);
+
+    /** Update sample rate label */
+    void updateSampleRateLabel(String newText);
 
     /** Disables stream selection*/
-	void startAcquisition();
+	void startAcquisition() override;
 
     /** Enables stream selection */
-	void stopAcquisition();
+	void stopAcquisition() override;
 
 
 private:
-    Array<int> inputStreamIds;
+    juce::SortedSet<uint32> inputSubprocessors;
 
     class GridViewerNode* gridViewerNode;
 
-    std::unique_ptr<Label> streamSelectionLabel;
-    std::unique_ptr<ComboBox> streamSelection;
+    std::unique_ptr<Label> subprocessorSelectionLabel;
+    std::unique_ptr<ComboBox> subprocessorSelection;
 
-    std::unique_ptr<Label> streamSampleRateLabel;
+    std::unique_ptr<Label> subprocessorSampleRateLabel;
 
     bool hasNoInputs;
 
-    uint16 selectedStream = 0;
-
-    void setDrawableStream();
-    
+    /** Set drawable subproccesor for canvas*/
+    void setDrawableSubprocessor(uint32 subProcId);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GridViewerEditor);
 };

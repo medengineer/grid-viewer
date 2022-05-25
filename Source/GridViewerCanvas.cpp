@@ -52,32 +52,7 @@ GridViewerCanvas::GridViewerCanvas(GridViewerNode * node_)
 {
     refreshRate = 30;
 
-    const int totalPixels = 4096; 
-
-    const int LEFT_BOUND = 20;
-    const int TOP_BOUND = 20;
-    const int SPACING = 2;
-    const int NUM_COLUMNS = 64;
-    const int HEIGHT = 8;
-    const int WIDTH = 8;
-
-    for (int i = 0; i < totalPixels; i++)
-    {
-        Electrode* e = new Electrode();
-
-        int column = i % NUM_COLUMNS;
-        int row = i / NUM_COLUMNS;
-        int L = LEFT_BOUND + column * (WIDTH + SPACING);
-        int T = TOP_BOUND + row * (HEIGHT + SPACING);
-
-        e->setBounds(L,
-            T,
-            WIDTH,
-            HEIGHT);
-
-        addAndMakeVisible(e);
-        electrodes.add(e);
-    }
+    updateElectrodeGrid(64);
 }
 
 GridViewerCanvas::~GridViewerCanvas()
@@ -132,15 +107,29 @@ void GridViewerCanvas::endAnimation()
     stopCallbacks();
 }
 
-void GridViewerCanvas::updateDataStream()
+void GridViewerCanvas::updateCanvasSubprocessor(uint32 subProcId)
 {
+    numChannels = node->getSubprocessorChanCount(subProcId);
 
-    std::cout << "Canvas updating stream to " << node->getName() << std::endl;
+    std::cout << "Canvas subprocessor: " << subProcId << ", num of channels: " << numChannels << std::endl;
 
-    numChannels = node->getNumInputChannels();
+    int numColumns = 0;
 
-    if (numChannels > 4096)
+    if(numChannels <= 64)
+        numColumns = 8;
+    else if(numChannels > 64 && numChannels <= 256)
+        numColumns = 16;
+    else if(numChannels > 256 && numChannels <= 1024)
+        numColumns = 32;
+    else if(numChannels > 1024 && numChannels <= 4096)
+        numColumns = 64;
+    else
+    {
+        numColumns = 64;
         numChannels = 4096;
+    }
+
+    updateElectrodeGrid(numColumns);
 
     for (int i = 0; i < electrodes.size(); i++)
     {
@@ -152,6 +141,38 @@ void GridViewerCanvas::updateDataStream()
         
 
     repaint();
+}
+
+void GridViewerCanvas::updateElectrodeGrid(int numCols)
+{
+    const int totalPixels = numCols * numCols; 
+
+    const int LEFT_BOUND = 20;
+    const int TOP_BOUND = 20;
+    const int SPACING = 2;
+    const int NUM_COLUMNS = numCols;
+    const int HEIGHT = 8;
+    const int WIDTH = 8;
+
+    electrodes.clear();
+
+    for (int i = 0; i < totalPixels; i++)
+    {
+        Electrode* e = new Electrode();
+
+        int column = i % NUM_COLUMNS;
+        int row = i / NUM_COLUMNS;
+        int L = LEFT_BOUND + column * (WIDTH + SPACING);
+        int T = TOP_BOUND + row * (HEIGHT + SPACING);
+
+        e->setBounds(L,
+            T,
+            WIDTH,
+            HEIGHT);
+
+        addAndMakeVisible(e);
+        electrodes.add(e);
+    }
 }
 
 void GridViewerCanvas::paint(Graphics &g)
